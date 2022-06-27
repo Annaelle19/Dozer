@@ -3,7 +3,7 @@ import main
 #imports relevant parts of the API package for extacting and manipulating EEG data 
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, LogLevels, BoardIds
 from brainflow.data_filter import DataFilter, FilterTypes, AggOperations, DetrendOperations
-from brainflow.ml_model import MLModel, BrainFlowMetrics, BrainFlowClassifiers, BrainFlowModelParams
+
 
 board_id = None
 params = None
@@ -40,7 +40,7 @@ def init_bci(_board_type):
     # turns on the loggers for additional debug output during dev
     BoardShim.enable_board_logger()
     DataFilter.enable_data_logger()
-    MLModel.enable_ml_logger()
+    # MLModel.enable_ml_logger()
 
     # this is where to set optional preferences for the BCI (e.g. like which USB port to use etc)
     params = BrainFlowInputParams()
@@ -52,9 +52,9 @@ def init_bci(_board_type):
     sampling_rate = BoardShim.get_sampling_rate(master_board_id)
     nfft = DataFilter.get_nearest_power_of_two(sampling_rate)
 
-    # Initialise ML Classification Parameters
-    restfulness_params = BrainFlowModelParams(BrainFlowMetrics.RESTFULNESS.value, BrainFlowClassifiers.DEFAULT_CLASSIFIER.value)
-    restfulness = MLModel(restfulness_params)
+    # # Initialise ML Classification Parameters
+    # restfulness_params = BrainFlowModelParams(BrainFlowMetrics.RESTFULNESS.value, BrainFlowClassifiers.DEFAULT_CLASSIFIER.value)
+    # restfulness = MLModel(restfulness_params)
     
     #Connect device to BCI and start streaming data
     print("Connecting to BCI")
@@ -86,16 +86,23 @@ def update_data():
     data = board.get_board_data() # grabs the eeg data currently stored in the boardShim buffer and makes an array called "data"
     data = filter_signal(data, eeg_channels) # uses the filter signal function above to clean data
 
+
+def get_alpha(_data, _channels, _sampling_rate):
+    bands = DataFilter.get_avg_band_powers(_data, _channels, _sampling_rate, True)
+    band_vals = bands[0]
+    _alpha = band_vals[2]
+    return _alpha
+
 # def calculate_psd(_data, _eeg_channels):
 #     for channel in _eeg_channels:
 #         DataFilter.get_psd_welch(_data[channel], nfft, nfft // 2, sampling_rate, WindowFunctions.BLACKMAN_HARRIS.value)
 #     return _data
 
-def get_restfulness(_data, _eeg_channels):
+# def get_restfulness(_data, _eeg_channels):
 
-    bands = DataFilter.get_avg_band_powers(_data, _eeg_channels, sampling_rate, True) # calculate the band power and standard deviation for each major eeg frequency band
-    feature_vector = bands[0] # get just the band power values 
-    restfulness.prepare() # ready the model
-    _restfulness_val = restfulness.predict(feature_vector) # fit data to model and get a prediction value
-    restfulness.release() # release the model from the data buffer
-    return _restfulness_val #return restfulness value to main
+#     bands = DataFilter.get_avg_band_powers(_data, _eeg_channels, sampling_rate, True) # calculate the band power and standard deviation for each major eeg frequency band
+#     feature_vector = bands[0] # get just the band power values 
+#     restfulness.prepare() # ready the model
+#     _restfulness_val = restfulness.predict(feature_vector) # fit data to model and get a prediction value
+#     restfulness.release() # release the model from the data buffer
+#     return _restfulness_val #return restfulness value to main

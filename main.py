@@ -20,18 +20,20 @@ def main():
 
     while True:
         
-        time.sleep(10) # wait to collect 10 seconds worth of data. It is said that "EEG stationarity" is between 10 and 20 seconds, meaning that timeframes of this length are long enough to see real brain dynamics.
+        time.sleep(5) # wait to collect 10 seconds worth of data. It is said that "EEG stationarity" is between 10 and 20 seconds, meaning that timeframes of this length are long enough to see real brain dynamics.
         bci.update_data() # prompts the BCI to pull any new data from the data buffer
-        restfulness_val = bci.get_restfulness(bci.data,bci.eeg_channels) *100000000000 # get a measure of restfulness (i multiplied this by 10000000 because the value was originally super tiny )
-        print('Restfulness: %s' % str(restfulness_val[0]))
-        print('Cooldown: %s' % str(cooldown))
+        alpha = bci.get_alpha(bci.data, bci.eeg_channels, bci.sampling_rate)
+        # restfulness_val = bci.get_restfulness(bci.data,bci.eeg_channels) *100000000000 # get a measure of restfulness (i multiplied this by 10000000 because the value was originally super tiny )
+        # print('Restfulness: %s' % str(restfulness_val[0]))
+        print(alpha)
+        # print('Cooldown: %s' % str(cooldown))
 
         # update cooldown
         if cooldown > 0:
             cooldown -= 10
 
         # if restuflness is past threshcold and cooldown is not active, begin stimulation and activate cooldown... i chose the threshold of 5 abitraily, i have no idea what would really be a good value as I havent tested this with real data yet
-        if restfulness_val > 5.0 and cooldown == 0:
+        if alpha > 5.0 and cooldown == 0:
             stimulations.stimulate_pink_noise()
             cooldown = 600
 
